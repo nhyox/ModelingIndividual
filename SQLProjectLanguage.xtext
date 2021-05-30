@@ -1,0 +1,95 @@
+grammar org.xtext.example.mydsl.SQLProjectLanguage with org.eclipse.xtext.common.Terminals
+
+generate sQLProjectLanguage "http://www.xtext.org/example/mydsl/SQLProjectLanguage"
+
+SQLSystem:
+	'system' name=ID 'url' value=STRING operation+=Operations*
+	;
+	
+Operations:
+	Add|Remove|Select|Relationship
+;
+
+Relationship:
+	'relation' name= ID 'from' foreignkey+=ForeignKey*
+;
+
+Select:
+	'select' name = ID table=Table  attributes+=Attribute* 
+;
+
+Table:
+	'table' table=[Add]
+;
+
+Remove:
+	'remove' name = ID table=Table attributes +=Attribute* 
+;
+
+ForeignKey:
+	'foreign' 'key' name=ID ':'type=('String'|'int') 'reference'overType=[Add] //'.' att= [Attribute]
+;
+
+Add:
+	'add' name = ID (primaryKey = PrimaryKey)? attributes+=Attribute* 
+;
+
+PrimaryKey://PRIMARY KEY
+	'primary' 'key' name=ID ':' type=('String'|'int') ('reqInt' requirement= [PrimaryKey] requirement1= LogicalEXP|'reqString' keyStr = PrimString)?
+;
+
+
+Attribute:
+   	'attribute' name=ID  ':' type=('String'|'int') ('reqInt' requirement= [Attribute] requirement1= LogicalEXP| 'reqString' stringBute = AttributeString)?
+   	
+;
+
+PrimString:
+	prim = [PrimaryKey] '=' primStr = STRING
+;
+
+AttributeString:
+	att = [Attribute] '=' attString = STRING
+;
+
+
+LogicalEXP:
+	op=RelationalOp right=MathExp 
+;
+
+RelationalOp:
+	type=('=' |  '<' |  '>' |  '<=' |  '>=')
+;
+
+MathExp:
+	exp=Exp
+;
+
+Exp returns Expression:
+	 left=Minus ('+'{Addition.left=current} right=Minus)*
+;
+
+Minus returns Expression:
+	 left=Mult ('-'{Substraction.left=current} right=Mult)*
+;
+
+Mult returns Expression:
+	 left=Div ('*'{Multiply.left=current} right=Div)*
+;
+
+Div returns Expression:
+	 left=Primary ('/'{Divide.left=current} right=Primary)*
+;
+
+Primary returns Expression:
+	Numbers | Parenthesis 
+;
+
+
+Parenthesis:
+	'(' exp=Exp ')'
+;
+
+Numbers:
+	value=INT
+;
